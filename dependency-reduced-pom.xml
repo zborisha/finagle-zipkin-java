@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.github.zborisha</groupId>
+  <artifactId>finagle-java</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <transformers>
+            <transformer>
+              <mainClass>com.github.zborisha.FinagleJavaService</mainClass>
+            </transformer>
+            <transformer />
+            <transformer>
+              <resource>META-INF/LICENSE</resource>
+              <file>target/classes/META-INF/LICENSE</file>
+            </transformer>
+            <transformer>
+              <resource>META-INF/NOTICE</resource>
+              <file>target/classes/META-INF/NOTICE</file>
+            </transformer>
+            <transformer>
+              <resource>META-INF/DEPENDENCIES</resource>
+              <file>target/classes/META-INF/DEPENDENCIES</file>
+            </transformer>
+            <transformer>
+              <resource>META-INF/cxf/bus-extensions.txt</resource>
+            </transformer>
+          </transformers>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <repositories>
+    <repository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>central</id>
+      <name>bintray</name>
+      <url>http://jcenter.bintray.com</url>
+    </repository>
+    <repository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>twitter</id>
+      <name>twitter</name>
+      <url>http://maven.twttr.com/</url>
+    </repository>
+  </repositories>
+</project>
+
