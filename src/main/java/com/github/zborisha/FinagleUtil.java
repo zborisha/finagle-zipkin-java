@@ -18,7 +18,17 @@ import com.twitter.finagle.tracing.Tracer;
 import com.twitter.finagle.zipkin.thrift.ZipkinTracer;
 import com.twitter.util.Future;
 
+import io.prometheus.client.Counter;
+import io.prometheus.client.Summary;
+
 public abstract class FinagleUtil {
+
+	static final Summary requestLatency = Summary.build().name("requests_latency_seconds")
+			.help("Request latency in seconds.").register();
+	static final Counter requestFailures = Counter.build().name("requests_failures_total").help("Request failures.")
+			.register();
+	static final Counter requests = Counter.build().name("service_invocations_total")
+			.help("Number of invocations so far.").register();
 
 	private static final int REPEAT_COUNT = 100000;
 	private static final int WAIT_MILLIS = 100;
@@ -47,7 +57,7 @@ public abstract class FinagleUtil {
 						.bindTo(new InetSocketAddress(getPort())).name(serverName).tracer(zipkinTracer));
 	}
 
-	private static int getPort() {
+	public static int getPort() {
 		String port = System.getenv(SERVER_PORT_ENV);
 		if (port != null && port.length() > 0) {
 			return Integer.parseInt(port);
@@ -86,12 +96,21 @@ public abstract class FinagleUtil {
 		return new Service<Request, Response>() {
 			@Override
 			public Future<Response> apply(Request req) {
-				Trace.record("Executing server logic for " + getServerName());
-				invokeExternalServicesOnce();
-				Response res = Response.apply(Status.Accepted());
-				res.setContentString("Hello from Finagle Server @" + System.currentTimeMillis());
-				Trace.record("Finished executing server logic for " + getServerName());
-				return Future.value(res);
+				Summary.Timer requestTimer = requestLatency.startTimer();
+				requests.inc();
+				try {
+					Trace.record("Executing server logic for " + getServerName());
+					invokeExternalServicesOnce();
+					Response res = Response.apply(Status.Accepted());
+					res.setContentString("Hello from Finagle Server @" + System.currentTimeMillis());
+					Trace.record("Finished executing server logic for " + getServerName());
+					return Future.value(res);
+				} catch (Exception exc) {
+					requestFailures.inc();
+					throw new IllegalStateException(exc);
+				} finally {
+					requestTimer.observeDuration();
+				}
 			}
 		};
 	}
