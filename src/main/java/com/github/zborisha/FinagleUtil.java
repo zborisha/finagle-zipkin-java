@@ -13,7 +13,6 @@ import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
 import com.twitter.finagle.http.Status;
 import com.twitter.finagle.stats.DefaultStatsReceiver;
-import com.twitter.finagle.tracing.Annotation;
 import com.twitter.finagle.tracing.Trace;
 import com.twitter.finagle.tracing.Tracer;
 import com.twitter.finagle.zipkin.thrift.ZipkinTracer;
@@ -91,6 +90,7 @@ public abstract class FinagleUtil {
 				invokeExternalServicesOnce();
 				Response res = Response.apply(Status.Accepted());
 				res.setContentString("Hello from Finagle Server @" + System.currentTimeMillis());
+				Trace.record("Finished executing server logic for " + getServerName());
 				return Future.value(res);
 			}
 		};
@@ -119,7 +119,9 @@ public abstract class FinagleUtil {
 				} catch (Exception ignored) {
 					// do nothing
 				}
-				System.out.println("Iteration " + i + " out of " + REPEAT_COUNT);
+				if (i % 100 == 0) {
+					System.out.println("Iteration " + i + " out of " + REPEAT_COUNT);
+				}
 				invokeExternalServicesOnce();
 			}
 		}
